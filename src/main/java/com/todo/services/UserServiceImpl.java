@@ -8,12 +8,16 @@ import com.todo.dtos.request.LoginRequest;
 import com.todo.dtos.request.TaskRequest;
 import com.todo.dtos.request.UserRequest;
 import com.todo.dtos.response.LoginResponse;
+import com.todo.dtos.response.TodoResponse;
 import com.todo.dtos.response.UserResponse;
 import com.todo.exceptions.EmailAlreadyExistException;
 import com.todo.exceptions.InvalidCredentialException;
+import com.todo.exceptions.UnfinishedTaskAlreadyExistException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
@@ -50,13 +54,25 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void addTask(TaskRequest taskRequest) {
-       todoService.createTask(taskRequest);
+    public TodoResponse addTask(TaskRequest taskRequest) {
+        Todo found = todoRepositories.findByTask(taskRequest.getTaskToAdd());
+        if(found != null && !found.isDone()){
+            throw new UnfinishedTaskAlreadyExistException("Unfinshed task already exist");
+        }
+       return todoService.createTask(taskRequest);
     }
 
     @Override
-    public Todo viewTask(String taskToView) {
-        return todoRepositories.findByTask(taskToView.toLowerCase());
+    public TodoResponse viewTask(String taskToView) {
+
+        Todo todo = todoRepositories.findByTask(taskToView.toLowerCase());
+        System.out.println(todo);
+        TodoResponse todoResponse = new TodoResponse();
+        todoResponse.setTask(todo.getTask());
+        LocalDateTime now = todo.getDateTime();
+        String timeCreated = now.format(DateTimeFormatter.ofPattern("EEE, dd/MM/yyyy HH:mm:ss"));
+        todoResponse.setDateCreated(timeCreated);
+        return todoResponse;
     }
 
     @Override

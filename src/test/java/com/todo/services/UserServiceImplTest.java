@@ -6,10 +6,12 @@ import com.todo.data.repository.Users;
 import com.todo.dtos.request.LoginRequest;
 import com.todo.dtos.request.UserRequest;
 import com.todo.dtos.response.LoginResponse;
+import com.todo.dtos.response.TodoResponse;
 import com.todo.dtos.response.UserResponse;
 import com.todo.dtos.request.TaskRequest;
 import com.todo.exceptions.EmailAlreadyExistException;
 import com.todo.exceptions.InvalidCredentialException;
+import com.todo.exceptions.UnfinishedTaskAlreadyExistException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -68,14 +70,33 @@ class UserServiceImplTest {
     }
 
     @Test
+    public void createTaskReturnTaskCreated(){
+        TaskRequest taskRequest = new TaskRequest();
+        taskRequest.setTaskToAdd(("Go to market"));
+        TodoResponse response = userServiceImpl.addTask(taskRequest);
+        assertNotNull(response);
+        assertTrue(taskRequest.getTaskToAdd().equalsIgnoreCase(response.getTask()));
+    }
+
+    @Test
+    public void createtaskCannotAddUncompletedTaskTwice(){
+        TaskRequest taskRequest = new TaskRequest();
+        taskRequest.setTaskToAdd(("Go to market"));
+        userServiceImpl.addTask(taskRequest);
+        TaskRequest taskRequest2 = new TaskRequest();
+        taskRequest2.setTaskToAdd(("Go to market"));
+        assertThrows(UnfinishedTaskAlreadyExistException.class, ()->userServiceImpl.addTask(taskRequest2));
+    }
+
+    @Test
     public void viewTaskDisplayTheTaskAdded(){
         TaskRequest taskRequest = new TaskRequest();
         taskRequest.setTaskToAdd(("Go to market"));
         userServiceImpl.addTask(taskRequest);
-        Todo taskToView = userServiceImpl.viewTask("Go to market");
+        TodoResponse taskToView = userServiceImpl.viewTask("Go to market");
         assertNotNull(taskToView);
         assertEquals(taskRequest.getTaskToAdd(), taskToView.getTask());
-        assertFalse(taskToView.isDone());
+//        assertFalse(taskToView.isDone());
     }
 
     @Test
@@ -83,12 +104,12 @@ class UserServiceImplTest {
         TaskRequest taskRequest = new TaskRequest();
         taskRequest.setTaskToAdd(("Go to market"));
         userServiceImpl.addTask(taskRequest);
-        Todo taskToView = userServiceImpl.viewTask("go to market");
+        TodoResponse taskToView = userServiceImpl.viewTask("go to market");
         assertNotNull(taskToView);
         assertEquals(taskRequest.getTaskToAdd(), taskToView.getTask());
         TaskRequest taskRequest2 = new TaskRequest();
         taskRequest2.setTaskToAdd(("go to market"));
-        Todo viewTask = userServiceImpl.viewTask("Go To MARKET");
+        TodoResponse viewTask = userServiceImpl.viewTask("Go To MARKET");
         assertNotNull(viewTask);
         assertEquals(taskRequest.getTaskToAdd(), viewTask.getTask());
 

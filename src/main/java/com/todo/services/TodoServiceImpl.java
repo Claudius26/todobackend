@@ -3,9 +3,12 @@ package com.todo.services;
 import com.todo.data.model.Todo;
 import com.todo.data.repository.TodoRepositories;
 import com.todo.dtos.request.TaskRequest;
+import com.todo.dtos.response.TodoResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import static com.todo.utils.Mapper.map;
@@ -17,10 +20,8 @@ public class TodoServiceImpl implements TodoService{
 
 
     @Override
-    public void createTask(TaskRequest taskRequest) {
-        Todo todo = new Todo();
-        todo.setTask(taskRequest.getTaskToAdd().toLowerCase());
-        todoRepositories.save(todo);
+    public TodoResponse createTask(TaskRequest taskRequest) {
+        return map(todoRepositories.save(map(taskRequest)));
     }
 
     @Override

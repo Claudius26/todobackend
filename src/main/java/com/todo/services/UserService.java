@@ -5,6 +5,7 @@ import com.todo.dtos.request.LoginRequest;
 import com.todo.dtos.request.TaskRequest;
 import com.todo.dtos.request.UserRequest;
 import com.todo.dtos.response.LoginResponse;
+import com.todo.dtos.response.TodoResponse;
 import com.todo.dtos.response.UserResponse;
 import org.springframework.stereotype.Service;
 
@@ -16,9 +17,9 @@ public interface UserService {
 
     LoginResponse login(LoginRequest loginRequest);
 
-    void addTask(TaskRequest taskRequest);
+    TodoResponse addTask(TaskRequest taskRequest);
 
-    Todo viewTask(String taskToView);
+    TodoResponse viewTask(String taskToView);
 
     List<Todo> viewUndoneTask();
 
