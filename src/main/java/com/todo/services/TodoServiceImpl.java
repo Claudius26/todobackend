@@ -61,12 +61,18 @@ public class TodoServiceImpl implements TodoService{
     @Override
     public void deleteUndoneTask() {
         List<Todo> unFinishedTask = viewUndoneTask();
+        if(unFinishedTask.isEmpty()){
+            throw new TaskNotFoundException("Task not found");
+        }
         todoRepositories.deleteAll(unFinishedTask);
     }
 
     @Override
     public void deleteFinishedTask() {
         List<Todo> completedTask = viewCompletedTask();
+        if(completedTask.isEmpty()){
+            throw new TaskNotFoundException("Task not found");
+        }
         todoRepositories.deleteAll(completedTask);
     }
 

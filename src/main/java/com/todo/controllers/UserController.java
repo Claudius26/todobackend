@@ -91,4 +91,34 @@ public class UserController {
         }
     }
 
+    @DeleteMapping("/taskToDelete")
+    public ResponseEntity<?> deleteTask(@RequestParam("taskToDelete")String taskToDelete){
+        try{
+            userService.deleteTask(taskToDelete);
+            return new ResponseEntity<>(new ApiResponse(taskToDelete, true), HttpStatus.OK);
+        }catch(TodoApplicationException exception){
+            return new ResponseEntity<>(new ApiResponse(exception.getMessage(), false), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @DeleteMapping("/api/undone")
+    public ResponseEntity<?> deleteUnDoneTasks(){
+        try{
+            userService.deleteUndoneTask();
+            return new ResponseEntity<>(new ApiResponse(true, true), HttpStatus.OK);
+        }catch (TodoApplicationException exception){
+            return new ResponseEntity<>(new ApiResponse(exception.getMessage(), false), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @DeleteMapping("/api/done")
+    public ResponseEntity<?> deleteDoneTasks(){
+        try{
+            userService.deleteFinishedTask();
+            return new ResponseEntity<>(new ApiResponse(true, true), HttpStatus.OK);
+        }catch (TodoApplicationException exception){
+            return new ResponseEntity<>(new ApiResponse(exception.getMessage(), false), HttpStatus.BAD_REQUEST);
+        }
+    }
+
 }

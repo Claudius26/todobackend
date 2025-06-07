@@ -231,6 +231,23 @@ class UserServiceImplTest {
     }
 
     @Test
+    public void deleteATaskThatIsNotDoneThrowsErroWhenAllTasksAreDoneOrDeleted(){
+
+        TaskRequest taskRequest2 = new TaskRequest();
+        taskRequest2.setTaskToAdd(("Run to market"));
+        userServiceImpl.addTask(taskRequest2);
+        TaskRequest taskRequest3 = new TaskRequest();
+        taskRequest3.setTaskToAdd(("fly to market"));
+        userServiceImpl.addTask(taskRequest3);
+        userServiceImpl.markTaskDone("fly to market");
+        userServiceImpl.markTaskDone("run to market");
+        assertThrows(TaskNotFoundException.class, ()->{
+            userServiceImpl.deleteUndoneTask();
+        });
+
+    }
+
+    @Test
     public void userCanDeleteATaskThatIsDone(){
         TaskRequest taskRequest = new TaskRequest();
         taskRequest.setTaskToAdd(("Go to market"));
@@ -245,6 +262,22 @@ class UserServiceImplTest {
         userServiceImpl.markTaskDone("go to market");
         userServiceImpl.deleteFinishedTask();
         assertEquals(1, todoRepositories.count());
+    }
+
+    @Test
+    public void deleteTaskThatIsDoneThrowsErrorWhenAllTaskAreNotDoneOrDeleted(){
+        TaskRequest taskRequest = new TaskRequest();
+        taskRequest.setTaskToAdd(("Go to market"));
+        userServiceImpl.addTask(taskRequest);
+        TaskRequest taskRequest2 = new TaskRequest();
+        taskRequest2.setTaskToAdd(("Run to market"));
+        userServiceImpl.addTask(taskRequest2);
+        TaskRequest taskRequest3 = new TaskRequest();
+        taskRequest3.setTaskToAdd(("fly to market"));
+        userServiceImpl.addTask(taskRequest3);
+        assertThrows(TaskNotFoundException.class, ()->{
+            userServiceImpl.deleteFinishedTask();
+        });
     }
 
     @Test
