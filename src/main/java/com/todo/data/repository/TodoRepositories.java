@@ -11,4 +11,6 @@ public interface TodoRepositories extends MongoRepository<Todo, String> {
     Todo findByTask(String task);
 
     List<Todo> findAllByIsDoneFalse();
+
+    List<Todo> findAllByIsDoneTrue();
 }
