@@ -21,7 +21,7 @@ public interface UserService {
 
     TodoResponse viewTask(String taskToView);
 
-    List<Todo> viewUndoneTask();
+    List<TodoResponse> viewUndoneTask();
 
     void markTaskDone(String taskToMark);
 

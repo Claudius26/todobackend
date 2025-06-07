@@ -9,9 +9,7 @@ import com.todo.dtos.response.LoginResponse;
 import com.todo.dtos.response.TodoResponse;
 import com.todo.dtos.response.UserResponse;
 import com.todo.dtos.request.TaskRequest;
-import com.todo.exceptions.EmailAlreadyExistException;
-import com.todo.exceptions.InvalidCredentialException;
-import com.todo.exceptions.UnfinishedTaskAlreadyExistException;
+import com.todo.exceptions.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -96,7 +94,7 @@ class UserServiceImplTest {
         TodoResponse taskToView = userServiceImpl.viewTask("Go to market");
         assertNotNull(taskToView);
         assertEquals(taskRequest.getTaskToAdd(), taskToView.getTask());
-//        assertFalse(taskToView.isDone());
+        //assertFalse(taskToView.isDone());
     }
 
     @Test
@@ -123,9 +121,31 @@ class UserServiceImplTest {
         TaskRequest taskRequest2 = new TaskRequest();
         taskRequest2.setTaskToAdd(("Run to market"));
         userServiceImpl.addTask(taskRequest2);
-        List<Todo> undoneTask = userServiceImpl.viewUndoneTask();
+        List<TodoResponse> undoneTask = userServiceImpl.viewUndoneTask();
         assertNotNull(undoneTask);
         assertEquals(2, undoneTask.size());
+    }
+
+    @Test
+    public void viewListOfUndoneTasksThrowsAllTaskDoneException(){
+        TaskRequest taskRequest = new TaskRequest();
+        taskRequest.setTaskToAdd(("Go to market"));
+        userServiceImpl.addTask(taskRequest);
+        TaskRequest taskRequest2 = new TaskRequest();
+        taskRequest2.setTaskToAdd(("Run to market"));
+        userServiceImpl.addTask(taskRequest2);
+        userServiceImpl.markTaskDone("Go to market");
+        userServiceImpl.markTaskDone("Run to market");
+        assertThrows(AllTaskDoneException.class, ()->userServiceImpl.viewUndoneTask());
+
+    }
+
+    @Test
+    public void viewtaskThrowTaskNotFoundExceptionWhenTaskIsNotFound(){
+        TaskRequest taskRequest = new TaskRequest();
+        taskRequest.setTaskToAdd(("Go to market"));
+        userServiceImpl.addTask(taskRequest);
+        assertThrows(TaskNotFoundException.class, ()->userServiceImpl.viewTask("Go To mark"));
     }
 
     @Test
@@ -137,6 +157,19 @@ class UserServiceImplTest {
          Todo todo = todoRepositories.findByTask("go to market");
          assertTrue(todo.isDone());
 
+    }
+
+    @Test
+    public void markCompletedTaskAsDoneThrowsExceptionWhenTaskHasAlreadyBeenmarkDone(){
+        TaskRequest taskRequest = new TaskRequest();
+        taskRequest.setTaskToAdd(("go to market"));
+        userServiceImpl.addTask(taskRequest);
+        userServiceImpl.markTaskDone("go to market");
+        Todo todo = todoRepositories.findByTask("go to market");
+        assertTrue(todo.isDone());
+        assertThrows(TaskAlreadyMarkedException.class, ()->{
+            userServiceImpl.markTaskDone("go to market");
+        });
     }
 
     @Test
@@ -164,6 +197,17 @@ class UserServiceImplTest {
         userServiceImpl.addTask(taskRequest);
         userServiceImpl.deleteTask("Go to market");
         assertEquals(todoRepositories.count(), 0);
+    }
+
+    @Test
+    public void deleteATaskThrowsErrorWhenYouTryToDeleteTaskThatHasBeenDeleted(){
+        TaskRequest taskRequest = new TaskRequest();
+        taskRequest.setTaskToAdd(("Go to market"));
+        userServiceImpl.addTask(taskRequest);
+        userServiceImpl.deleteTask("Go to market");
+        assertThrows(TaskNotFoundException.class, ()->{
+            userServiceImpl.deleteTask("Go to market");
+        });
     }
 
     @Test

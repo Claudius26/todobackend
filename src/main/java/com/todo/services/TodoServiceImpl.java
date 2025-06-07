@@ -4,6 +4,8 @@ import com.todo.data.model.Todo;
 import com.todo.data.repository.TodoRepositories;
 import com.todo.dtos.request.TaskRequest;
 import com.todo.dtos.response.TodoResponse;
+import com.todo.exceptions.TaskAlreadyMarkedException;
+import com.todo.exceptions.TaskNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -37,6 +39,12 @@ public class TodoServiceImpl implements TodoService{
     @Override
     public void markTaskDone(String taskToMark) {
         Todo todo = todoRepositories.findByTask(taskToMark.toLowerCase());
+        if(todo == null){
+            throw new TaskNotFoundException("Task not found");
+        }
+        if(todo.isDone()){
+            throw new TaskAlreadyMarkedException("Task already marked");
+        }
         todo.setDone(true);
         todoRepositories.save(todo);
     }
@@ -44,6 +52,9 @@ public class TodoServiceImpl implements TodoService{
     @Override
     public void deleteTask(String taskToDelete) {
         Todo todo = todoRepositories.findByTask(taskToDelete.toLowerCase());
+        if(todo == null){
+            throw new TaskNotFoundException("Task not found");
+        }
         todoRepositories.delete(todo);
     }
 

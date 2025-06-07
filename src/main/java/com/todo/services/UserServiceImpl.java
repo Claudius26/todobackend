@@ -10,14 +10,11 @@ import com.todo.dtos.request.UserRequest;
 import com.todo.dtos.response.LoginResponse;
 import com.todo.dtos.response.TodoResponse;
 import com.todo.dtos.response.UserResponse;
-import com.todo.exceptions.EmailAlreadyExistException;
-import com.todo.exceptions.InvalidCredentialException;
-import com.todo.exceptions.UnfinishedTaskAlreadyExistException;
+import com.todo.exceptions.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -64,25 +61,30 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public TodoResponse viewTask(String taskToView) {
-
         Todo todo = todoRepositories.findByTask(taskToView.toLowerCase());
-        System.out.println(todo);
-        TodoResponse todoResponse = new TodoResponse();
-        todoResponse.setTask(todo.getTask());
-        LocalDateTime now = todo.getDateTime();
-        String timeCreated = now.format(DateTimeFormatter.ofPattern("EEE, dd/MM/yyyy HH:mm:ss"));
-        todoResponse.setDateCreated(timeCreated);
-        return todoResponse;
+
+        if(todo == null)throw new TaskNotFoundException("Task not found");
+
+        return map(todo);
     }
 
     @Override
-    public List<Todo> viewUndoneTask() {
-       return todoService.viewUndoneTask();
+    public List<TodoResponse> viewUndoneTask() {
+
+        List<TodoResponse> todoResponse = new ArrayList<>();
+        List<Todo> unDoneTasks = todoService.viewUndoneTask();
+        if(unDoneTasks.isEmpty()){
+            throw new AllTaskDoneException("All tasks are done");
+        }
+       for(Todo unDone : unDoneTasks ){
+           todoResponse.add(map(unDone));
+       }
+       return todoResponse;
     }
 
     @Override
     public void markTaskDone(String taskToMark) {
-        todoService.markTaskDone(taskToMark);
+        todoService.markTaskDone(taskToMark.toLowerCase());
     }
 
     @Override

@@ -61,9 +61,34 @@ public class UserController {
         }
     }
 
-    @GetMapping("/view/taskToView")
+    @GetMapping("/taskToView")
     public ResponseEntity<?> viewTask(@RequestParam("taskToView")  String taskToView){
-        return new ResponseEntity<>(new ApiResponse(userService.viewTask(taskToView), true), HttpStatus.OK);
+        try {
+            return new ResponseEntity<>(new ApiResponse(userService.viewTask(taskToView),
+                    true), HttpStatus.OK);
+        }catch(TodoApplicationException exception){
+            return new ResponseEntity<>(new ApiResponse(exception.getMessage(), false), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @GetMapping
+    public ResponseEntity<?> viewUnDoneTasks(){
+        try {
+            return new ResponseEntity<>(new ApiResponse(userService
+                    .viewUndoneTask(), true), HttpStatus.OK);
+        }catch (TodoApplicationException exception){
+            return new ResponseEntity<>(new ApiResponse(exception.getMessage(), false), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @PostMapping("/taskToMark")
+    public ResponseEntity<?> markTask(@RequestBody String taskToMark){
+        try{
+            userService.markTaskDone(taskToMark);
+            return new ResponseEntity<>(new ApiResponse(taskToMark, true), HttpStatus.OK);
+        }catch (TodoApplicationException exception){
+            return new ResponseEntity<>(new ApiResponse(exception.getMessage(), false), HttpStatus.BAD_REQUEST);
+        }
     }
 
 }
