@@ -13,6 +13,8 @@ import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.scheduling.concurrent.SimpleAsyncTaskScheduler;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
@@ -85,7 +87,19 @@ class UserServiceImplTest {
         assertNotNull(viewTask);
         assertEquals(taskRequest.getTaskToAdd(), viewTask.getTask());
 
+    }
 
+    @Test
+    public void userCanViewTaskThatAreNotDone(){
+        TaskRequest taskRequest = new TaskRequest();
+        taskRequest.setTaskToAdd(("Go to market"));
+        userServiceImpl.addTask(taskRequest);
+        TaskRequest taskRequest2 = new TaskRequest();
+        taskRequest2.setTaskToAdd(("Run to market"));
+        userServiceImpl.addTask(taskRequest2);
+        List<Todo> undoneTask = userServiceImpl.viewUndoneTask();
+        assertNotNull(undoneTask);
+        assertEquals(2, undoneTask.size());
     }
 
 }

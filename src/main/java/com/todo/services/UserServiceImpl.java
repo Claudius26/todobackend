@@ -10,12 +10,17 @@ import com.todo.dtos.response.UserResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class UserServiceImpl implements UserService {
     @Autowired
     private Users users;
     @Autowired
     private TodoRepositories todoRepositories;
+
+    @Autowired
+    private TodoServiceImpl todoService;
 
     @Override
     public UserResponse register(UserRequest request) {
@@ -33,13 +38,16 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void addTask(TaskRequest taskRequest) {
-        Todo todo = new Todo();
-        todo.setTask(taskRequest.getTaskToAdd().toLowerCase());
-        todoRepositories.save(todo);
+       todoService.createTask(taskRequest);
     }
 
     @Override
     public Todo viewTask(String taskToView) {
         return todoRepositories.findByTask(taskToView.toLowerCase());
+    }
+
+    @Override
+    public List<Todo> viewUndoneTask() {
+       return todoService.viewUndoneTask();
     }
 }
