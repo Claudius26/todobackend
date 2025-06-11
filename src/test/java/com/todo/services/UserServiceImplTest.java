@@ -41,19 +41,31 @@ class UserServiceImplTest {
     @Test
     public void registercanincreasethenumberofuser(){
         UserRequest userRequest = new UserRequest();
+        userRequest.setFirstname("firstname");
+        userRequest.setLastname("lastname");
         userRequest.setEmail("email11@email.com");
+        userRequest.setPassword("password");
         userServiceImpl.register(userRequest);
         assertEquals(1, users.count());
 
     }
 
     @Test
+    public void registerUserCannotRegisterWhenInformationsAreEmpty(){
+        UserRequest userRequest = new UserRequest();
+        assertThrows(EmptyDetailsException.class, ()->{
+            userServiceImpl.register(userRequest);
+        });
+    }
+
+    @Test
     public void registerCanShowThatuserResponseIsNotNull(){
         UserRequest userRequest = new UserRequest();
+        userRequest.setFirstname("firstname");
+        userRequest.setLastname("lastname");
         userRequest.setEmail("email@email.com");
         userRequest.setPassword("password");
-        userRequest.setLastname("lastname");
-        userRequest.setFirstname("firstname");
+
         UserResponse userResponse = userServiceImpl.register(userRequest);
         assertNotNull(userResponse);
         assertEquals(userResponse.getEmail(), userRequest.getEmail());
@@ -185,7 +197,7 @@ class UserServiceImplTest {
         userServiceImpl.addTask(taskRequest3);
         userServiceImpl.markTaskDone("fly to market");
         userServiceImpl.markTaskDone("go to market");
-        List<Todo> completedTask = userServiceImpl.viewCompletedTask();
+        List<TodoResponse> completedTask = userServiceImpl.viewCompletedTask();
         assertNotNull(completedTask);
         assertEquals(2, completedTask.size());
     }
@@ -294,10 +306,18 @@ class UserServiceImplTest {
         userServiceImpl.register(registerUser());
         LoginRequest loginRequest = new LoginRequest();
         loginRequest.setEmail("clau@gmail.com");
-        loginRequest.setPassword("1234");
+        loginRequest.setPassword("123456");
         LoginResponse loginResponse = userServiceImpl.login(loginRequest);
         assertNotNull(loginResponse);
         assertEquals("Success", loginResponse.getMessage());
+    }
+
+    @Test
+    public void loginThrowsDetailsMustBeFilledExceptionIfEmptyFieldsAreInputted(){
+        LoginRequest loginRequest = new LoginRequest();
+        assertThrows(EmptyDetailsException.class, ()->{
+            userServiceImpl.login(loginRequest);
+        });
     }
 
     @Test
@@ -332,12 +352,23 @@ class UserServiceImplTest {
         });
     }
 
+    @Test
+    public void viewCompletedTasksThrowsTaskNotFoundExceptionWhenYouTryToViewWhenItEmpty(){
+        TaskRequest taskRequest = new TaskRequest();
+        taskRequest.setTaskToAdd(("Go to market"));
+        userServiceImpl.addTask(taskRequest);
+        assertThrows(TaskNotFoundException.class, ()->{
+            userServiceImpl.viewCompletedTask();
+        });
+    }
+
     private UserRequest registerUser(){
         UserRequest userRequest = new UserRequest();
-        userRequest.setEmail("clau@gmail.com");
-        userRequest.setPassword("1234");
-        userRequest.setLastname("lastname");
         userRequest.setFirstname("firstname");
+        userRequest.setLastname("lastname");
+        userRequest.setEmail("clau@gmail.com");
+        userRequest.setPassword("123456");
+
         return userRequest;
     }
 

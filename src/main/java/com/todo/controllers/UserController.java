@@ -42,6 +42,7 @@ public class UserController {
 
     @PostMapping("/user/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
+
         try {
             LoginResponse response = userServiceImpl.login(loginRequest);
             return new ResponseEntity<>(new ApiResponse(response, true), HttpStatus.OK);
@@ -71,7 +72,7 @@ public class UserController {
         }
     }
 
-    @GetMapping
+    @GetMapping("/viewIncompleteTasks")
     public ResponseEntity<?> viewUnDoneTasks(){
         try {
             return new ResponseEntity<>(new ApiResponse(userService
@@ -79,6 +80,17 @@ public class UserController {
         }catch (TodoApplicationException exception){
             return new ResponseEntity<>(new ApiResponse(exception.getMessage(), false), HttpStatus.BAD_REQUEST);
         }
+    }
+
+    @GetMapping("/viewCompletedTasks")
+    public ResponseEntity<?> viewCompletedTasks(){
+        try{
+            return  new ResponseEntity<>(new ApiResponse(userService
+                    .viewCompletedTask(), true), HttpStatus.OK);
+        }catch (TodoApplicationException exception){
+            return new ResponseEntity<>(new ApiResponse(exception.getMessage(), false), HttpStatus.BAD_REQUEST);
+        }
+
     }
 
     @PostMapping("/taskToMark")

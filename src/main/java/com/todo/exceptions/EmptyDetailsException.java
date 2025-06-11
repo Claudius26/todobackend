@@ -1,7 +1,7 @@
 package com.todo.exceptions;
 
-public class EmptyDetailsException extends RuntimeException {
-  public EmptyDetailsException(String message) {
-    super(message);
-  }
+public class EmptyDetailsException extends TodoApplicationException {
+    public EmptyDetailsException(String message) {
+        super(message);
+    }
 }

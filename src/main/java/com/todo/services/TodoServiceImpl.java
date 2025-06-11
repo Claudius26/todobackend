@@ -33,7 +33,11 @@ public class TodoServiceImpl implements TodoService{
 
     @Override
     public List<Todo> viewCompletedTask() {
-        return todoRepositories.findAllByIsDoneTrue();
+        List<Todo> todos = todoRepositories.findAllByIsDoneTrue();
+        if(todos.isEmpty()){
+            throw  new TaskNotFoundException("Task not found");
+        }
+        return todos;
     }
 
     @Override

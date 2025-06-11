@@ -25,7 +25,7 @@ public interface UserService {
 
     void markTaskDone(String taskToMark);
 
-    List<Todo> viewCompletedTask();
+    List<TodoResponse> viewCompletedTask();
 
     void deleteTask(String taskToDelete);
 

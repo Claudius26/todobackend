@@ -32,6 +32,12 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponse register(UserRequest request) {
+        if(request.getFirstname().isEmpty() ||
+                request.getLastname().isEmpty() ||
+                request.getEmail().isEmpty() ||
+                request.getPassword().isEmpty()) {
+            throw new EmptyDetailsException("Details must be filled");
+        }
         Optional<User> user = users.findByEmail(request.getEmail());
         if(user.isPresent()){
             throw new EmailAlreadyExistException("Email already exist");
@@ -41,6 +47,9 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public LoginResponse login(LoginRequest loginRequest) {
+        if(loginRequest.getEmail().isEmpty() || loginRequest.getPassword().isEmpty()){
+            throw new EmptyDetailsException("Details must be filled");
+        }
         Optional<User> user = users.findByEmail(loginRequest.getEmail());
         if(user.isEmpty() || !user.get().getPassword().equals(loginRequest.getPassword())){
             throw new InvalidCredentialException("Invalid credentials");
@@ -88,8 +97,17 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<Todo> viewCompletedTask() {
-        return todoService.viewCompletedTask();
+    public List<TodoResponse> viewCompletedTask() {
+
+        List<TodoResponse> responses = new ArrayList<>();
+        List<Todo> doneTasks = todoService.viewCompletedTask();
+        if(doneTasks.isEmpty()){
+            throw new AllTaskDoneException("All tasks are done");
+        }
+        for(Todo doneTask : doneTasks){
+            responses.add(map(doneTask));
+        }
+        return responses;
     }
 
     @Override
