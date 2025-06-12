@@ -45,7 +45,7 @@ public class TodoServiceImpl implements TodoService{
         Optional<User> user = users.findByEmail(email);
         if(user.isEmpty())throw new UserNotFoundException("User not found");
         List<Todo> todos = todoRepositories.findTodoByUserId(user.get().getId());
-        if(todos.isEmpty()) throw new AllTaskDoneException("No unfinsihed tasks");
+        if(todos.isEmpty()) throw new AllTaskDoneException("Task not found");
         List<TodoResponse> todoResponses = new ArrayList<>();
         for(Todo todo : todos){
             if(todo.isDone()){
@@ -55,25 +55,63 @@ public class TodoServiceImpl implements TodoService{
         return todoResponses;
     }
 
+//    @Override
+//    public void markTaskDone(TaskRequest task) {
+//        Optional<User> user = users.findByEmail(task.getUserEmail());
+//        if(user.isEmpty()){
+//            throw new UserNotFoundException("User not found");
+//        }
+//        if(isLoggedIn(user.get())){
+//            throw new UserNotLoggedInException("User not logged in");
+//        }
+//
+//        List<Todo> todos = findAllTodo(user.get().getId());
+//        for(Todo todo : todos){
+//            if(!todo.getTask().equals(task.getTaskToAdd()))
+//                throw new TaskNotFoundException("task not found");
+//
+//           if(todo.getTask().equals(task.getTaskToAdd())) {
+//               if(todo.isDone()){
+//                   throw new TaskAlreadyMarkedException("Task already marked");
+//               }
+//               todo.setDone(true);
+//               todoRepositories.save(todo);
+//           }
+//
+//        }
+//
+//    }
+
     @Override
     public void markTaskDone(TaskRequest task) {
         Optional<User> user = users.findByEmail(task.getUserEmail());
-        if(user.isEmpty()){
+        if (user.isEmpty()) {
             throw new UserNotFoundException("User not found");
         }
-        if(isLoggedIn(user.get())){
+        if (isLoggedIn(user.get())) {
             throw new UserNotLoggedInException("User not logged in");
         }
-        List<Todo> todos = findAllTodo(user.get().getId());
-        for(Todo todo : todos){
-           if(todo.getTask().equals(task.getTaskToAdd())) {
-               todo.setDone(true);
-               todoRepositories.save(todo);
-           }
 
+        List<Todo> todos = findAllTodo(user.get().getId());
+        boolean found = false;
+
+        for (Todo todo : todos) {
+            if (todo.getTask().equals(task.getTaskToAdd())) {
+                found = true;
+                if (todo.isDone()) {
+                    throw new TaskAlreadyMarkedException("Task already marked");
+                }
+                todo.setDone(true);
+                todoRepositories.save(todo);
+                break;
+            }
         }
 
+        if (!found) {
+            throw new TaskNotFoundException("task not found");
+        }
     }
+
 
     @Override
     public void deleteTask(TaskRequest task) {
@@ -145,7 +183,7 @@ public class TodoServiceImpl implements TodoService{
         List<Todo> todos = findAllTodo(user.get().getId());
         for(Todo todo: todos){
             if(todo.getTask().equals(taskRequest.getTaskToAdd()) && !todo.isDone())throw new
-                    UnfinishedTaskAlreadyExistException("Task is already done");
+                    UnfinishedTaskAlreadyExistException("undone task already exist");
         }
         Todo todo = new Todo();
         todo.setUserId(user.get().getId());
@@ -168,8 +206,8 @@ public class TodoServiceImpl implements TodoService{
     }
 
     @Override
-    public TodoResponse viewTask(TaskRequest taskRequest) {
-        Optional<User> user = users.findByEmail(taskRequest.getUserEmail());
+    public TodoResponse viewTask(String userEmail, String taskToView) {
+        Optional<User> user = users.findByEmail(userEmail);
         if(user.isEmpty()){
             throw new UserNotFoundException("User not found");
         }
@@ -178,11 +216,11 @@ public class TodoServiceImpl implements TodoService{
         }
         List<Todo> todos = todoRepositories.findTodoByUserId(user.get().getId());
         for(Todo todo : todos){
-            if(todo.getTask().equals(taskRequest.getTaskToAdd())){
+            if(todo.getTask().equals(taskToView)){
                return map(todo);
             }
         }
-        return null;
+        throw new TaskNotFoundException("Task not found");
     }
 
     private boolean isLoggedIn(User user) {

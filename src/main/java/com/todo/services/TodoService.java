@@ -20,5 +20,5 @@ public interface TodoService {
 
     List<Todo> findAllTodo(String id);
 
-    TodoResponse viewTask(TaskRequest taskRequest);
+    TodoResponse viewTask(String userEmail, String taskToView);
 }

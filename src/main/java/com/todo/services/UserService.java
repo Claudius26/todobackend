@@ -19,6 +19,6 @@ public interface UserService {
 
     LoginResponse login(LoginRequest loginRequest);
 
-    LogOutResponse logOut(LogOutRequest LogOutRequest);
+    void logOut(LogOutRequest LogOutRequest);
 
 }

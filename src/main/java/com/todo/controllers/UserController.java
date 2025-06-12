@@ -1,5 +1,6 @@
 package com.todo.controllers;
 
+import com.todo.dtos.request.LogOutRequest;
 import com.todo.dtos.request.LoginRequest;
 import com.todo.dtos.request.TaskRequest;
 import com.todo.dtos.request.UserRequest;
@@ -50,6 +51,16 @@ public class UserController {
             return new ResponseEntity<>(new ApiResponse(exception.getMessage(), false), HttpStatus.BAD_REQUEST);
         }
 
+    }
+
+    @PostMapping("/user/logOut")
+    public ResponseEntity<?> logout(@RequestBody LogOutRequest logOutRequest) {
+        try{
+            userServiceImpl.logOut(logOutRequest);
+            return new ResponseEntity<>(new ApiResponse(true, true), HttpStatus.OK);
+        }catch(TodoApplicationException exception){
+            return new ResponseEntity<>(new ApiResponse(exception.getMessage(), false), HttpStatus.BAD_REQUEST);
+        }
     }
 
 }

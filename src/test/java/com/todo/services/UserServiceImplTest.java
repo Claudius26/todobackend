@@ -436,7 +436,7 @@ class UserServiceImplTest {
         taskRequest4.setUserEmail(response.getEmail());
         todoServiceImpl.addTodo(taskRequest4);
 
-        TodoResponse todoResponse = todoServiceImpl.viewTask(taskRequest1);
+        TodoResponse todoResponse = todoServiceImpl.viewTask(taskRequest1.getUserEmail(), taskRequest1.getTaskToAdd());
         assertEquals(todoResponse.getTask(), taskRequest1.getTaskToAdd());
     }
 

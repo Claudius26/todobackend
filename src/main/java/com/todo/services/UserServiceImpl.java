@@ -68,11 +68,16 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public LogOutResponse logOut(LogOutRequest logOutRequest) {
+    public void logOut(LogOutRequest logOutRequest) {
         Optional<User> user = users.findByEmail(logOutRequest.getCurrentUserEmail());
+        if(user.isEmpty()){
+            throw new UserNotFoundException("User not found");
+        }
+        if(!user.get().isLoggedIn()){
+            throw new UserNotLoggedInException("User not logged in");
+        }
         user.get().setLoggedIn(false);
         users.save(user.get());
-        return new LogOutResponse();
 
     }
 }

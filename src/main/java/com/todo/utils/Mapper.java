@@ -21,7 +21,7 @@ public class Mapper {
     public static User map(UserRequest request) {
         User user = new User();
         user.setFullname(request.getFirstname()  + " " + request.getLastname());
-        user.setEmail(request.getEmail());
+        user.setEmail(request.getEmail().trim().toLowerCase());
         user.setPassword(request.getPassword());
         return user;
     }
