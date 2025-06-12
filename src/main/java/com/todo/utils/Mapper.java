@@ -2,18 +2,22 @@ package com.todo.utils;
 
 import com.todo.data.model.Todo;
 import com.todo.data.model.User;
+import com.todo.data.repository.Users;
 import com.todo.dtos.request.TaskRequest;
 import com.todo.dtos.request.UserRequest;
 import com.todo.dtos.response.TodoResponse;
 import com.todo.dtos.response.UserResponse;
 import com.todo.exceptions.EmptyDetailsException;
+import com.todo.exceptions.UserNotFoundException;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Optional;
 
 @Component
 public class Mapper {
+
     public static User map(UserRequest request) {
         User user = new User();
         user.setFullname(request.getFirstname()  + " " + request.getLastname());
@@ -29,11 +33,6 @@ public class Mapper {
         return userResponse;
     }
 
-    public static Todo map(TaskRequest request){
-        Todo todo = new Todo();
-        todo.setTask(request.getTaskToAdd().toLowerCase());
-        return todo;
-    }
     public static TodoResponse map(Todo task){
         TodoResponse response = new TodoResponse();
         response.setTask(task.getTask());
@@ -43,4 +42,5 @@ public class Mapper {
         response.setDateCreated(timeCreated);
         return response;
     }
+
 }

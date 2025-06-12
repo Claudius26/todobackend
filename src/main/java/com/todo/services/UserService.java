@@ -1,9 +1,11 @@
 package com.todo.services;
 
 import com.todo.data.model.Todo;
+import com.todo.dtos.request.LogOutRequest;
 import com.todo.dtos.request.LoginRequest;
 import com.todo.dtos.request.TaskRequest;
 import com.todo.dtos.request.UserRequest;
+import com.todo.dtos.response.LogOutResponse;
 import com.todo.dtos.response.LoginResponse;
 import com.todo.dtos.response.TodoResponse;
 import com.todo.dtos.response.UserResponse;
@@ -17,20 +19,6 @@ public interface UserService {
 
     LoginResponse login(LoginRequest loginRequest);
 
-    TodoResponse addTask(TaskRequest taskRequest);
-
-    TodoResponse viewTask(String taskToView);
-
-    List<TodoResponse> viewUndoneTask();
-
-    void markTaskDone(String taskToMark);
-
-    List<TodoResponse> viewCompletedTask();
-
-    void deleteTask(String taskToDelete);
-
-    void deleteUndoneTask();
-
-    void deleteFinishedTask();
+    LogOutResponse logOut(LogOutRequest LogOutRequest);
 
 }

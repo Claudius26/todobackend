@@ -16,4 +16,6 @@ public interface TodoRepositories extends MongoRepository<Todo, String> {
 
 
     List<Todo> findAllByIsDoneTrue();
+
+    List<Todo> findTodoByUserId(String id);
 }

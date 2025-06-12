@@ -4,9 +4,11 @@ import com.todo.data.model.Todo;
 import com.todo.data.model.User;
 import com.todo.data.repository.TodoRepositories;
 import com.todo.data.repository.Users;
+import com.todo.dtos.request.LogOutRequest;
 import com.todo.dtos.request.LoginRequest;
 import com.todo.dtos.request.TaskRequest;
 import com.todo.dtos.request.UserRequest;
+import com.todo.dtos.response.LogOutResponse;
 import com.todo.dtos.response.LoginResponse;
 import com.todo.dtos.response.TodoResponse;
 import com.todo.dtos.response.UserResponse;
@@ -54,74 +56,23 @@ public class UserServiceImpl implements UserService {
         if(user.isEmpty() || !user.get().getPassword().equals(loginRequest.getPassword())){
             throw new InvalidCredentialException("Invalid credentials");
         }
+        if(user.get().isLoggedIn()){
+            throw new UserAllReadyLoggedInException("User is already logged in");
+        }
+        user.get().setLoggedIn(true);
+        users.save(user.get());
+
         LoginResponse loginResponse = new LoginResponse();
         loginResponse.setMessage("Success");
         return loginResponse;
     }
 
     @Override
-    public TodoResponse addTask(TaskRequest taskRequest) {
-        Todo found = todoRepositories.findByTask(taskRequest.getTaskToAdd());
-        if(found != null && !found.isDone()){
-            throw new UnfinishedTaskAlreadyExistException("Unfinshed task already exist");
-        }
-       return todoService.createTask(taskRequest);
-    }
+    public LogOutResponse logOut(LogOutRequest logOutRequest) {
+        Optional<User> user = users.findByEmail(logOutRequest.getCurrentUserEmail());
+        user.get().setLoggedIn(false);
+        users.save(user.get());
+        return new LogOutResponse();
 
-    @Override
-    public TodoResponse viewTask(String taskToView) {
-        Todo todo = todoRepositories.findByTask(taskToView.toLowerCase());
-
-        if(todo == null)throw new TaskNotFoundException("Task not found");
-
-        return map(todo);
-    }
-
-    @Override
-    public List<TodoResponse> viewUndoneTask() {
-
-        List<TodoResponse> todoResponse = new ArrayList<>();
-        List<Todo> unDoneTasks = todoService.viewUndoneTask();
-        if(unDoneTasks.isEmpty()){
-            throw new AllTaskDoneException("All tasks are done");
-        }
-       for(Todo unDone : unDoneTasks ){
-           todoResponse.add(map(unDone));
-       }
-       return todoResponse;
-    }
-
-    @Override
-    public void markTaskDone(String taskToMark) {
-        todoService.markTaskDone(taskToMark.toLowerCase());
-    }
-
-    @Override
-    public List<TodoResponse> viewCompletedTask() {
-
-        List<TodoResponse> responses = new ArrayList<>();
-        List<Todo> doneTasks = todoService.viewCompletedTask();
-        if(doneTasks.isEmpty()){
-            throw new AllTaskDoneException("All tasks are done");
-        }
-        for(Todo doneTask : doneTasks){
-            responses.add(map(doneTask));
-        }
-        return responses;
-    }
-
-    @Override
-    public void deleteTask(String taskToDelete) {
-       todoService.deleteTask(taskToDelete);
-    }
-
-    @Override
-    public void deleteUndoneTask() {
-       todoService.deleteUndoneTask();
-    }
-
-    @Override
-    public void deleteFinishedTask() {
-        todoService.deleteFinishedTask();
     }
 }

@@ -1,8 +1,10 @@
 package com.todo.services;
 
 import com.todo.data.model.Todo;
+import com.todo.data.model.User;
 import com.todo.data.repository.TodoRepositories;
 import com.todo.data.repository.Users;
+import com.todo.dtos.request.LogOutRequest;
 import com.todo.dtos.request.LoginRequest;
 import com.todo.dtos.request.UserRequest;
 import com.todo.dtos.response.LoginResponse;
@@ -18,6 +20,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.scheduling.concurrent.SimpleAsyncTaskScheduler;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -31,6 +34,8 @@ class UserServiceImplTest {
 
     @Autowired
     private TodoRepositories todoRepositories;
+    @Autowired
+    private TodoServiceImpl todoServiceImpl;
 
     @BeforeEach
     void setUp() {
@@ -50,13 +55,6 @@ class UserServiceImplTest {
 
     }
 
-    @Test
-    public void registerUserCannotRegisterWhenInformationsAreEmpty(){
-        UserRequest userRequest = new UserRequest();
-        assertThrows(EmptyDetailsException.class, ()->{
-            userServiceImpl.register(userRequest);
-        });
-    }
 
     @Test
     public void registerCanShowThatuserResponseIsNotNull(){
@@ -71,226 +69,7 @@ class UserServiceImplTest {
         assertEquals(userResponse.getEmail(), userRequest.getEmail());
     }
 
-    @Test
-    public void createTaskAndtaskRepoIsIncrreasedByOne(){
-        TaskRequest taskRequest = new TaskRequest();
-        taskRequest.setTaskToAdd(("Go to market"));
-        userServiceImpl.addTask(taskRequest);
-        assertEquals(1, todoRepositories.count());
-    }
 
-    @Test
-    public void createTaskReturnTaskCreated(){
-        TaskRequest taskRequest = new TaskRequest();
-        taskRequest.setTaskToAdd(("Go to market"));
-        TodoResponse response = userServiceImpl.addTask(taskRequest);
-        assertNotNull(response);
-        assertTrue(taskRequest.getTaskToAdd().equalsIgnoreCase(response.getTask()));
-    }
-
-    @Test
-    public void createtaskCannotAddUncompletedTaskTwice(){
-        TaskRequest taskRequest = new TaskRequest();
-        taskRequest.setTaskToAdd(("Go to market"));
-        userServiceImpl.addTask(taskRequest);
-        TaskRequest taskRequest2 = new TaskRequest();
-        taskRequest2.setTaskToAdd(("Go to market"));
-        assertThrows(UnfinishedTaskAlreadyExistException.class, ()->userServiceImpl.addTask(taskRequest2));
-    }
-
-    @Test
-    public void viewTaskDisplayTheTaskAdded(){
-        TaskRequest taskRequest = new TaskRequest();
-        taskRequest.setTaskToAdd(("Go to market"));
-        userServiceImpl.addTask(taskRequest);
-        TodoResponse taskToView = userServiceImpl.viewTask("Go to market");
-        assertNotNull(taskToView);
-        assertEquals(taskRequest.getTaskToAdd(), taskToView.getTask());
-        //assertFalse(taskToView.isDone());
-    }
-
-    @Test
-    public void viewTAskRetunTaskToViewRegardlessOfTheCase(){
-        TaskRequest taskRequest = new TaskRequest();
-        taskRequest.setTaskToAdd(("Go to market"));
-        userServiceImpl.addTask(taskRequest);
-        TodoResponse taskToView = userServiceImpl.viewTask("go to market");
-        assertNotNull(taskToView);
-        assertEquals(taskRequest.getTaskToAdd(), taskToView.getTask());
-        TaskRequest taskRequest2 = new TaskRequest();
-        taskRequest2.setTaskToAdd(("go to market"));
-        TodoResponse viewTask = userServiceImpl.viewTask("Go To MARKET");
-        assertNotNull(viewTask);
-        assertEquals(taskRequest.getTaskToAdd(), viewTask.getTask());
-
-    }
-
-    @Test
-    public void userCanViewTaskThatAreNotDone(){
-        TaskRequest taskRequest = new TaskRequest();
-        taskRequest.setTaskToAdd(("Go to market"));
-        userServiceImpl.addTask(taskRequest);
-        TaskRequest taskRequest2 = new TaskRequest();
-        taskRequest2.setTaskToAdd(("Run to market"));
-        userServiceImpl.addTask(taskRequest2);
-        List<TodoResponse> undoneTask = userServiceImpl.viewUndoneTask();
-        assertNotNull(undoneTask);
-        assertEquals(2, undoneTask.size());
-    }
-
-    @Test
-    public void viewListOfUndoneTasksThrowsAllTaskDoneException(){
-        TaskRequest taskRequest = new TaskRequest();
-        taskRequest.setTaskToAdd(("Go to market"));
-        userServiceImpl.addTask(taskRequest);
-        TaskRequest taskRequest2 = new TaskRequest();
-        taskRequest2.setTaskToAdd(("Run to market"));
-        userServiceImpl.addTask(taskRequest2);
-        userServiceImpl.markTaskDone("Go to market");
-        userServiceImpl.markTaskDone("Run to market");
-        assertThrows(AllTaskDoneException.class, ()->userServiceImpl.viewUndoneTask());
-
-    }
-
-    @Test
-    public void viewtaskThrowTaskNotFoundExceptionWhenTaskIsNotFound(){
-        TaskRequest taskRequest = new TaskRequest();
-        taskRequest.setTaskToAdd(("Go to market"));
-        userServiceImpl.addTask(taskRequest);
-        assertThrows(TaskNotFoundException.class, ()->userServiceImpl.viewTask("Go To mark"));
-    }
-
-    @Test
-    public void markCompletedTaskAsDone(){
-        TaskRequest taskRequest = new TaskRequest();
-        taskRequest.setTaskToAdd(("go to market"));
-        userServiceImpl.addTask(taskRequest);
-         userServiceImpl.markTaskDone("go to market");
-         Todo todo = todoRepositories.findByTask("go to market");
-         assertTrue(todo.isDone());
-
-    }
-
-    @Test
-    public void markCompletedTaskAsDoneThrowsExceptionWhenTaskHasAlreadyBeenmarkDone(){
-        TaskRequest taskRequest = new TaskRequest();
-        taskRequest.setTaskToAdd(("go to market"));
-        userServiceImpl.addTask(taskRequest);
-        userServiceImpl.markTaskDone("go to market");
-        Todo todo = todoRepositories.findByTask("go to market");
-        assertTrue(todo.isDone());
-        assertThrows(TaskAlreadyMarkedException.class, ()->{
-            userServiceImpl.markTaskDone("go to market");
-        });
-    }
-
-    @Test
-    public void viewCompletedTasksReturnTaskThatHasBeenCompletedTest(){
-        TaskRequest taskRequest = new TaskRequest();
-        taskRequest.setTaskToAdd(("Go to market"));
-        userServiceImpl.addTask(taskRequest);
-        TaskRequest taskRequest2 = new TaskRequest();
-        taskRequest2.setTaskToAdd(("Run to market"));
-        userServiceImpl.addTask(taskRequest2);
-        TaskRequest taskRequest3 = new TaskRequest();
-        taskRequest3.setTaskToAdd(("fly to market"));
-        userServiceImpl.addTask(taskRequest3);
-        userServiceImpl.markTaskDone("fly to market");
-        userServiceImpl.markTaskDone("go to market");
-        List<TodoResponse> completedTask = userServiceImpl.viewCompletedTask();
-        assertNotNull(completedTask);
-        assertEquals(2, completedTask.size());
-    }
-
-    @Test
-    public void userCanDelelteATask(){
-        TaskRequest taskRequest = new TaskRequest();
-        taskRequest.setTaskToAdd(("Go to market"));
-        userServiceImpl.addTask(taskRequest);
-        userServiceImpl.deleteTask("Go to market");
-        assertEquals(todoRepositories.count(), 0);
-    }
-
-    @Test
-    public void deleteATaskThrowsErrorWhenYouTryToDeleteTaskThatHasBeenDeleted(){
-        TaskRequest taskRequest = new TaskRequest();
-        taskRequest.setTaskToAdd(("Go to market"));
-        userServiceImpl.addTask(taskRequest);
-        userServiceImpl.deleteTask("Go to market");
-        assertThrows(TaskNotFoundException.class, ()->{
-            userServiceImpl.deleteTask("Go to market");
-        });
-    }
-
-    @Test
-    public void userCanDeleteATaskThatIsNotDone(){
-        TaskRequest taskRequest = new TaskRequest();
-        taskRequest.setTaskToAdd(("Go to market"));
-        userServiceImpl.addTask(taskRequest);
-
-        TaskRequest taskRequest2 = new TaskRequest();
-        taskRequest2.setTaskToAdd(("Run to market"));
-        userServiceImpl.addTask(taskRequest2);
-
-        TaskRequest taskRequest3 = new TaskRequest();
-        taskRequest3.setTaskToAdd(("fly to market"));
-        userServiceImpl.addTask(taskRequest3);
-
-        userServiceImpl.markTaskDone("fly to market");
-        userServiceImpl.markTaskDone("go to market");
-        userServiceImpl.deleteUndoneTask();
-        assertEquals(2, todoRepositories.count());
-    }
-
-    @Test
-    public void deleteATaskThatIsNotDoneThrowsErroWhenAllTasksAreDoneOrDeleted(){
-
-        TaskRequest taskRequest2 = new TaskRequest();
-        taskRequest2.setTaskToAdd(("Run to market"));
-        userServiceImpl.addTask(taskRequest2);
-        TaskRequest taskRequest3 = new TaskRequest();
-        taskRequest3.setTaskToAdd(("fly to market"));
-        userServiceImpl.addTask(taskRequest3);
-        userServiceImpl.markTaskDone("fly to market");
-        userServiceImpl.markTaskDone("run to market");
-        assertThrows(TaskNotFoundException.class, ()->{
-            userServiceImpl.deleteUndoneTask();
-        });
-
-    }
-
-    @Test
-    public void userCanDeleteATaskThatIsDone(){
-        TaskRequest taskRequest = new TaskRequest();
-        taskRequest.setTaskToAdd(("Go to market"));
-        userServiceImpl.addTask(taskRequest);
-        TaskRequest taskRequest2 = new TaskRequest();
-        taskRequest2.setTaskToAdd(("Run to market"));
-        userServiceImpl.addTask(taskRequest2);
-        TaskRequest taskRequest3 = new TaskRequest();
-        taskRequest3.setTaskToAdd(("fly to market"));
-        userServiceImpl.addTask(taskRequest3);
-        userServiceImpl.markTaskDone("fly to market");
-        userServiceImpl.markTaskDone("go to market");
-        userServiceImpl.deleteFinishedTask();
-        assertEquals(1, todoRepositories.count());
-    }
-
-    @Test
-    public void deleteTaskThatIsDoneThrowsErrorWhenAllTaskAreNotDoneOrDeleted(){
-        TaskRequest taskRequest = new TaskRequest();
-        taskRequest.setTaskToAdd(("Go to market"));
-        userServiceImpl.addTask(taskRequest);
-        TaskRequest taskRequest2 = new TaskRequest();
-        taskRequest2.setTaskToAdd(("Run to market"));
-        userServiceImpl.addTask(taskRequest2);
-        TaskRequest taskRequest3 = new TaskRequest();
-        taskRequest3.setTaskToAdd(("fly to market"));
-        userServiceImpl.addTask(taskRequest3);
-        assertThrows(TaskNotFoundException.class, ()->{
-            userServiceImpl.deleteFinishedTask();
-        });
-    }
 
     @Test
     public void twoUserscannotRegisterWithSameEmail(){
@@ -303,7 +82,10 @@ class UserServiceImplTest {
 
     @Test
     public void userCanLogin(){
-        userServiceImpl.register(registerUser());
+        UserResponse userResponse = userServiceImpl.register(registerUser());
+        LogOutRequest logOutRequest = new LogOutRequest();
+        logOutRequest.setCurrentUserEmail(userResponse.getEmail());
+        userServiceImpl.logOut(logOutRequest);
         LoginRequest loginRequest = new LoginRequest();
         loginRequest.setEmail("clau@gmail.com");
         loginRequest.setPassword("123456");
@@ -313,12 +95,19 @@ class UserServiceImplTest {
     }
 
     @Test
-    public void loginThrowsDetailsMustBeFilledExceptionIfEmptyFieldsAreInputted(){
+    public void loginWillSetUserLoggedInStatusTooToBeTrueWhenAUserIsLogginIn(){
+        userServiceImpl.register(registerUser());
+        Optional<User> user = users.findByEmail("clau@gmail.com");
+        user.get().setLoggedIn(false);
+        users.save(user.get());
         LoginRequest loginRequest = new LoginRequest();
-        assertThrows(EmptyDetailsException.class, ()->{
-            userServiceImpl.login(loginRequest);
-        });
+        loginRequest.setEmail("clau@gmail.com");
+        loginRequest.setPassword("123456");
+        userServiceImpl.login(loginRequest);
+        Optional<User> updatedUser = users.findByEmail("clau@gmail.com");
+        assertTrue(updatedUser.get().isLoggedIn());
     }
+
 
     @Test
     public void loginThrowserrorWhenEmaildontmatch(){
@@ -353,12 +142,409 @@ class UserServiceImplTest {
     }
 
     @Test
-    public void viewCompletedTasksThrowsTaskNotFoundExceptionWhenYouTryToViewWhenItEmpty(){
+    public void testThatWhenTwoUsersAddsATodoEachcanFindtheirTodo(){
+        UserRequest userRequest = new UserRequest();
+        userRequest.setFirstname("firstname");
+        userRequest.setLastname("lastname");
+        userRequest.setEmail("claud@gmail.com");
+        userRequest.setPassword("password");
+        userServiceImpl.register(userRequest);
+        UserRequest userRequest2 = new UserRequest();
+        userRequest2.setFirstname("firstname");
+        userRequest2.setLastname("lastname");
+        userRequest2.setEmail("claud2@gmail.com");
+        userRequest2.setPassword("password");
+        userServiceImpl.register(userRequest2);
         TaskRequest taskRequest = new TaskRequest();
-        taskRequest.setTaskToAdd(("Go to market"));
-        userServiceImpl.addTask(taskRequest);
-        assertThrows(TaskNotFoundException.class, ()->{
-            userServiceImpl.viewCompletedTask();
+        taskRequest.setTaskToAdd("beans");
+        taskRequest.setUserEmail("claud@gmail.com");
+        todoServiceImpl.addTodo(taskRequest);
+        TaskRequest taskRequest2 = new TaskRequest();
+        taskRequest2.setTaskToAdd("buy beans");
+        taskRequest2.setUserEmail("claud2@gmail.com");
+        todoServiceImpl.addTodo(taskRequest2);
+        Optional<User> user = users.findByEmail("claud@gmail.com");
+        Optional<User> user2 = users.findByEmail("claud2@gmail.com");
+        assertTrue(user.isPresent());
+        assertTrue(user2.isPresent());
+
+
+    }
+    @Test
+    public void taskCannotBeAddedWhenuserIsNotLoggedIn(){
+        userServiceImpl.register(registerUser());
+        Optional<User> user = users.findByEmail("clau@gmail.com");
+        user.get().setLoggedIn(false);
+        users.save(user.get());
+        TaskRequest taskRequest = new TaskRequest();
+        taskRequest.setTaskToAdd("beans");
+        taskRequest.setUserEmail("clau@gmail.com");
+        assertThrows(UserNotLoggedInException.class, ()->{
+            todoServiceImpl.addTodo(taskRequest);
+        });
+
+    }
+
+    @Test
+    public void testThatUserCanFindNumberOfTodoheCreated(){
+        UserRequest userRequest = new UserRequest();
+        userRequest.setFirstname("firstname");
+        userRequest.setLastname("lastname");
+        userRequest.setEmail("claud@gmail.com");
+        userRequest.setPassword("123456");
+        UserResponse response = userServiceImpl.register(userRequest);
+
+        userServiceImpl.register(registerUser());
+        Optional<User> user = users.findByEmail("clau@gmail.com");
+        TaskRequest taskRequest1 = new TaskRequest();
+        taskRequest1.setTaskToAdd("buy garri");
+       taskRequest1.setUserEmail("clau@gmail.com");
+        TodoResponse response1 = todoServiceImpl.addTodo(taskRequest1);
+        //System.out.println(response1);
+
+        TaskRequest taskRequest2 = new TaskRequest();
+        taskRequest2.setTaskToAdd("buy beans");
+        taskRequest2.setUserEmail("clau@gmail.com");
+        TodoResponse response2 = todoServiceImpl.addTodo(taskRequest2);
+        //System.out.println(response2);
+
+        TaskRequest taskRequest3 = new TaskRequest();
+        taskRequest3.setTaskToAdd("buy beans");
+        taskRequest3.setUserEmail(response.getEmail());
+        TodoResponse response3 = todoServiceImpl.addTodo(taskRequest3);
+        System.out.println(response3);
+
+        TaskRequest taskRequest4 = new TaskRequest();
+        taskRequest4.setTaskToAdd("buy rice");
+        taskRequest4.setUserEmail(response.getEmail());
+        todoServiceImpl.addTodo(taskRequest4);
+
+
+        List<Todo> todo = todoServiceImpl.findAllTodo(user.get().getId());
+        assertEquals(4, todoRepositories.count());
+        assertEquals(2, todo.size());
+    }
+
+    @Test
+    public void testThatUserCannotFindNumberOfTodoheCreatedWhenLoggedOut() {
+        userServiceImpl.register(registerUser());
+        Optional<User> user = users.findByEmail("clau@gmail.com");
+        TaskRequest taskRequest1 = new TaskRequest();
+        taskRequest1.setTaskToAdd("buy garri");
+        taskRequest1.setUserEmail(user.get().getEmail());
+        todoServiceImpl.addTodo(taskRequest1);
+        LogOutRequest logOutRequest = new LogOutRequest();
+        logOutRequest.setCurrentUserEmail(user.get().getEmail());
+        userServiceImpl.logOut(logOutRequest);
+        assertThrows(UserNotLoggedInException.class, ()->{
+           todoServiceImpl.findAllTodo(user.get().getId());
+        });
+
+
+    }
+
+    @Test
+    public void userCanDeleteTaskTheyAdded(){
+        UserRequest userRequest = new UserRequest();
+        userRequest.setFirstname("firstname");
+        userRequest.setLastname("lastname");
+        userRequest.setEmail("claud@gmail.com");
+        userRequest.setPassword("123456");
+        UserResponse response = userServiceImpl.register(userRequest);
+
+        userServiceImpl.register(registerUser());
+        Optional<User> user = users.findByEmail("clau@gmail.com");
+        TaskRequest taskRequest1 = new TaskRequest();
+        taskRequest1.setTaskToAdd("buy garri");
+        taskRequest1.setUserEmail("clau@gmail.com");
+        TodoResponse response1 = todoServiceImpl.addTodo(taskRequest1);
+        //System.out.println(response1);
+
+        TaskRequest taskRequest2 = new TaskRequest();
+        taskRequest2.setTaskToAdd("buy beans");
+        taskRequest2.setUserEmail("clau@gmail.com");
+        TodoResponse response2 = todoServiceImpl.addTodo(taskRequest2);
+
+
+        TaskRequest taskRequest3 = new TaskRequest();
+        taskRequest3.setTaskToAdd("buy beans");
+        taskRequest3.setUserEmail(response.getEmail());
+        TodoResponse response3 = todoServiceImpl.addTodo(taskRequest3);
+        System.out.println(response3);
+
+        TaskRequest taskRequest4 = new TaskRequest();
+        taskRequest4.setTaskToAdd("buy rice");
+        taskRequest4.setUserEmail(response.getEmail());
+        todoServiceImpl.addTodo(taskRequest4);
+
+        todoServiceImpl.deleteTask(taskRequest1);
+
+
+        List<Todo> todo = todoServiceImpl.findAllTodo(user.get().getId());
+        assertEquals(3, todoRepositories.count());
+        assertEquals(1, todo.size());
+    }
+
+    @Test
+    public void testThatUserCannotDeleteTodoheCreatedWhenLoggedOut() {
+        userServiceImpl.register(registerUser());
+        Optional<User> user = users.findByEmail("clau@gmail.com");
+        TaskRequest taskRequest1 = new TaskRequest();
+        taskRequest1.setTaskToAdd("buy garri");
+        taskRequest1.setUserEmail(user.get().getEmail());
+        todoServiceImpl.addTodo(taskRequest1);
+        LogOutRequest logOutRequest = new LogOutRequest();
+        logOutRequest.setCurrentUserEmail(user.get().getEmail());
+        userServiceImpl.logOut(logOutRequest);
+        assertThrows(UserNotLoggedInException.class, ()->{
+            todoServiceImpl.deleteTask(taskRequest1);
+        });
+
+
+    }
+
+    @Test
+    public void userCanDeleteCompletedTaskTheyAdded(){
+        UserRequest userRequest = new UserRequest();
+        userRequest.setFirstname("firstname");
+        userRequest.setLastname("lastname");
+        userRequest.setEmail("claud@gmail.com");
+        userRequest.setPassword("123456");
+        UserResponse response = userServiceImpl.register(userRequest);
+
+        userServiceImpl.register(registerUser());
+        Optional<User> user = users.findByEmail("clau@gmail.com");
+        TaskRequest taskRequest1 = new TaskRequest();
+        taskRequest1.setTaskToAdd("buy garri");
+        taskRequest1.setUserEmail("clau@gmail.com");
+        TodoResponse response1 = todoServiceImpl.addTodo(taskRequest1);
+
+
+        TaskRequest taskRequest2 = new TaskRequest();
+        taskRequest2.setTaskToAdd("buy beans");
+        taskRequest2.setUserEmail("clau@gmail.com");
+        TodoResponse response2 = todoServiceImpl.addTodo(taskRequest2);
+
+
+        TaskRequest taskRequest3 = new TaskRequest();
+        taskRequest3.setTaskToAdd("buy beans");
+        taskRequest3.setUserEmail(response.getEmail());
+        TodoResponse response3 = todoServiceImpl.addTodo(taskRequest3);
+
+        TaskRequest taskRequest4 = new TaskRequest();
+        taskRequest4.setTaskToAdd("buy rice");
+        taskRequest4.setUserEmail(response.getEmail());
+        todoServiceImpl.addTodo(taskRequest4);
+        todoServiceImpl.markTaskDone(taskRequest1);
+        todoServiceImpl.markTaskDone(taskRequest2);
+        todoServiceImpl.markTaskDone(taskRequest3);
+        todoServiceImpl.deleteFinishedTask(user.get().getEmail());
+
+        List<Todo> todo = todoRepositories.findTodoByUserId(user.get().getId());
+        assertEquals(2, todoRepositories.count());
+        assertEquals(0, todo.size());
+    }
+
+    @Test
+    public void userCannotDeleteFinishedTaskWhenLoggedOut(){
+        userServiceImpl.register(registerUser());
+        Optional<User> user = users.findByEmail("clau@gmail.com");
+        TaskRequest taskRequest1 = new TaskRequest();
+        taskRequest1.setTaskToAdd("buy garri");
+        taskRequest1.setUserEmail(user.get().getEmail());
+        todoServiceImpl.addTodo(taskRequest1);
+        LogOutRequest logOutRequest = new LogOutRequest();
+        logOutRequest.setCurrentUserEmail(user.get().getEmail());
+        userServiceImpl.logOut(logOutRequest);
+        assertThrows(UserNotLoggedInException.class, ()->{
+            todoServiceImpl.deleteFinishedTask(user.get().getEmail());
+        });
+    }
+
+    @Test
+    public void userCanDeleteUnFinishedTaskTheyAdded(){
+        UserRequest userRequest = new UserRequest();
+        userRequest.setFirstname("firstname");
+        userRequest.setLastname("lastname");
+        userRequest.setEmail("claud@gmail.com");
+        userRequest.setPassword("123456");
+        UserResponse response = userServiceImpl.register(userRequest);
+
+        userServiceImpl.register(registerUser());
+        Optional<User> user = users.findByEmail("clau@gmail.com");
+        TaskRequest taskRequest1 = new TaskRequest();
+        taskRequest1.setTaskToAdd("buy garri");
+        taskRequest1.setUserEmail("clau@gmail.com");
+        TodoResponse response1 = todoServiceImpl.addTodo(taskRequest1);
+
+
+        TaskRequest taskRequest2 = new TaskRequest();
+        taskRequest2.setTaskToAdd("buy beans");
+        taskRequest2.setUserEmail("clau@gmail.com");
+        TodoResponse response2 = todoServiceImpl.addTodo(taskRequest2);
+
+
+        TaskRequest taskRequest3 = new TaskRequest();
+        taskRequest3.setTaskToAdd("buy beans");
+        taskRequest3.setUserEmail(response.getEmail());
+        TodoResponse response3 = todoServiceImpl.addTodo(taskRequest3);
+
+        TaskRequest taskRequest4 = new TaskRequest();
+        taskRequest4.setTaskToAdd("buy rice");
+        taskRequest4.setUserEmail(response.getEmail());
+        todoServiceImpl.addTodo(taskRequest4);
+        todoServiceImpl.markTaskDone(taskRequest1);
+        todoServiceImpl.markTaskDone(taskRequest3);
+        todoServiceImpl.deleteUndoneTask(user.get().getEmail());
+
+        List<Todo> todo = todoRepositories.findTodoByUserId(user.get().getId());
+        assertEquals(3, todoRepositories.count());
+        assertEquals(1, todo.size());
+
+    }
+
+    @Test
+    public void userCanViewATask(){
+        UserRequest userRequest = new UserRequest();
+        userRequest.setFirstname("firstname");
+        userRequest.setLastname("lastname");
+        userRequest.setEmail("claud@gmail.com");
+        userRequest.setPassword("123456");
+        UserResponse response = userServiceImpl.register(userRequest);
+
+        userServiceImpl.register(registerUser());
+        Optional<User> user = users.findByEmail("clau@gmail.com");
+        TaskRequest taskRequest1 = new TaskRequest();
+        taskRequest1.setTaskToAdd("buy garri");
+        taskRequest1.setUserEmail("clau@gmail.com");
+        TodoResponse response1 = todoServiceImpl.addTodo(taskRequest1);
+
+
+        TaskRequest taskRequest2 = new TaskRequest();
+        taskRequest2.setTaskToAdd("buy beans");
+        taskRequest2.setUserEmail("clau@gmail.com");
+        TodoResponse response2 = todoServiceImpl.addTodo(taskRequest2);
+
+
+        TaskRequest taskRequest3 = new TaskRequest();
+        taskRequest3.setTaskToAdd("buy beans");
+        taskRequest3.setUserEmail(response.getEmail());
+        TodoResponse response3 = todoServiceImpl.addTodo(taskRequest3);
+
+        TaskRequest taskRequest4 = new TaskRequest();
+        taskRequest4.setTaskToAdd("buy rice");
+        taskRequest4.setUserEmail(response.getEmail());
+        todoServiceImpl.addTodo(taskRequest4);
+
+        TodoResponse todoResponse = todoServiceImpl.viewTask(taskRequest1);
+        assertEquals(todoResponse.getTask(), taskRequest1.getTaskToAdd());
+    }
+
+    @Test
+    public void userCanViewUnFinishedTaskTheyAdded(){
+        UserRequest userRequest = new UserRequest();
+        userRequest.setFirstname("firstname");
+        userRequest.setLastname("lastname");
+        userRequest.setEmail("claud@gmail.com");
+        userRequest.setPassword("123456");
+        UserResponse response = userServiceImpl.register(userRequest);
+
+        userServiceImpl.register(registerUser());
+        Optional<User> user = users.findByEmail("clau@gmail.com");
+        TaskRequest taskRequest1 = new TaskRequest();
+        taskRequest1.setTaskToAdd("buy garri");
+        taskRequest1.setUserEmail("clau@gmail.com");
+        TodoResponse response1 = todoServiceImpl.addTodo(taskRequest1);
+
+
+        TaskRequest taskRequest2 = new TaskRequest();
+        taskRequest2.setTaskToAdd("buy beans");
+        taskRequest2.setUserEmail("clau@gmail.com");
+        TodoResponse response2 = todoServiceImpl.addTodo(taskRequest2);
+
+
+        TaskRequest taskRequest3 = new TaskRequest();
+        taskRequest3.setTaskToAdd("buy beans");
+        taskRequest3.setUserEmail(response.getEmail());
+        TodoResponse response3 = todoServiceImpl.addTodo(taskRequest3);
+
+        TaskRequest taskRequest4 = new TaskRequest();
+        taskRequest4.setTaskToAdd("buy rice");
+        taskRequest4.setUserEmail(response.getEmail());
+        todoServiceImpl.addTodo(taskRequest4);
+        todoServiceImpl.markTaskDone(taskRequest1);
+        todoServiceImpl.markTaskDone(taskRequest3);
+
+        List<TodoResponse> todo = todoServiceImpl.viewUndoneTask(user.get().getEmail());
+        assertEquals(4, todoRepositories.count());
+        assertEquals(1, todo.size());
+
+    }
+    @Test
+    public void userCanViewFinishedTaskTheyAdded(){
+        UserRequest userRequest = new UserRequest();
+        userRequest.setFirstname("firstname");
+        userRequest.setLastname("lastname");
+        userRequest.setEmail("claud@gmail.com");
+        userRequest.setPassword("123456");
+        UserResponse response = userServiceImpl.register(userRequest);
+
+        userServiceImpl.register(registerUser());
+        Optional<User> user = users.findByEmail("clau@gmail.com");
+        TaskRequest taskRequest1 = new TaskRequest();
+        taskRequest1.setTaskToAdd("buy garri");
+        taskRequest1.setUserEmail("clau@gmail.com");
+        TodoResponse response1 = todoServiceImpl.addTodo(taskRequest1);
+
+
+        TaskRequest taskRequest2 = new TaskRequest();
+        taskRequest2.setTaskToAdd("buy beans");
+        taskRequest2.setUserEmail("clau@gmail.com");
+        TodoResponse response2 = todoServiceImpl.addTodo(taskRequest2);
+
+
+        TaskRequest taskRequest3 = new TaskRequest();
+        taskRequest3.setTaskToAdd("buy beans");
+        taskRequest3.setUserEmail(response.getEmail());
+        TodoResponse response3 = todoServiceImpl.addTodo(taskRequest3);
+
+        TaskRequest taskRequest4 = new TaskRequest();
+        taskRequest4.setTaskToAdd("buy rice");
+        taskRequest4.setUserEmail(response.getEmail());
+        todoServiceImpl.addTodo(taskRequest4);
+        todoServiceImpl.markTaskDone(taskRequest1);
+        todoServiceImpl.markTaskDone(taskRequest3);
+
+        List<TodoResponse> todo = todoServiceImpl.viewCompletedTask(user.get().getEmail());
+        assertEquals(4, todoRepositories.count());
+        assertEquals(1, todo.size());
+
+    }
+
+    @Test
+    public void userCannotLoginWhenHeIsAlreadyLoggedIn(){
+        userServiceImpl.register(registerUser());
+        LoginRequest loginRequest = new LoginRequest();
+        loginRequest.setEmail("clau@gmail.com");
+        loginRequest.setPassword("123456");
+        assertThrows(UserAllReadyLoggedInException.class, () -> {
+            userServiceImpl.login(loginRequest);
+        });
+    }
+
+    @Test
+    public void userCannotAddTaskThatHasBeenAddedButnotdone(){
+        userServiceImpl.register(registerUser());
+        Optional<User> user = users.findByEmail("clau@gmail.com");
+        TaskRequest taskRequest = new TaskRequest();
+        taskRequest.setTaskToAdd("beans");
+        taskRequest.setUserEmail("clau@gmail.com");
+        todoServiceImpl.addTodo(taskRequest);
+        TaskRequest taskRequest2 = new TaskRequest();
+        taskRequest2.setTaskToAdd("beans");
+        taskRequest2.setUserEmail("clau@gmail.com");
+        assertThrows(UnfinishedTaskAlreadyExistException.class, () -> {
+            todoServiceImpl.addTodo(taskRequest2);
         });
     }
 

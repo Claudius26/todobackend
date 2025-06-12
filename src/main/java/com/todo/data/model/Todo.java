@@ -14,4 +14,5 @@ public class Todo {
     private String task;
     private boolean isDone = false;
     private LocalDateTime dateTime =  LocalDateTime.now();
+    private String userId;
 }

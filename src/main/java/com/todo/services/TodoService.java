@@ -8,11 +8,17 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 @Service
 public interface TodoService {
-    TodoResponse createTask(TaskRequest taskRequest);
-    List<Todo> viewUndoneTask();
-    List<Todo> viewCompletedTask();
-    void markTaskDone(String taskToMark);
-    void deleteTask(String taskToDelete);
-    void deleteUndoneTask();
-    void deleteFinishedTask();
+    List<TodoResponse> viewUndoneTask(String email);
+    List<TodoResponse> viewCompletedTask(String email);
+    void markTaskDone(TaskRequest task);
+    void deleteTask(TaskRequest task);
+    void deleteUndoneTask(String userEmail);
+    void deleteFinishedTask(String userEmail);
+
+    TodoResponse addTodo(TaskRequest taskRequest);
+
+
+    List<Todo> findAllTodo(String id);
+
+    TodoResponse viewTask(TaskRequest taskRequest);
 }
